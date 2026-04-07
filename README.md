@@ -34,7 +34,7 @@ pip install starlette-html-stories
 
 ## Usage
 
-### Mount the stories app
+### Step 1: Mount the stories app
 
 Mount `StoriesApp` only in development.
 
@@ -58,7 +58,7 @@ if app.debug:
 
 Then open `/__stories__/` in your browser.
 
-### Write a component story
+### Step 2: Write a component story
 
 Stories are plain Python functions.
 
@@ -84,7 +84,7 @@ def GraceHopper(args):
     return UserCard(user=args["user"])
 ```
 
-### Sets a preview layout
+## Preview Layout
 
 Use `preview_layout` when stories should use your app shell, global CSS, or
 design-system layout.
