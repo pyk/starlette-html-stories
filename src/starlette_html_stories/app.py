@@ -169,13 +169,18 @@ def _story_group(
                 li(
                     a(
                         story.name,
-                        href=request.url_for("story_iframe", story_id=story.id),
+                        href=_story_path(request, story.id),
                     )
                 )
                 for story in stories
             ]
         ),
     )
+
+
+def _story_path(request: Request, story_id: str) -> str:
+    root_path = str(request.scope.get("root_path", ""))
+    return f"{root_path}/iframe/{story_id}"
 
 
 _INDEX_CSS = (

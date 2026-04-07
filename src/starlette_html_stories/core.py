@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from starlette.datastructures import URLPath
 from starlette.responses import Response
 from starlette.routing import BaseRoute, NoMatchFound
 
@@ -60,13 +61,11 @@ class StoryContext:
             except NoMatchFound:
                 continue
             route_path = str(url_path).lstrip("/")
-            return str(
-                self.request.url_for(
-                    "story_route",
-                    story_id=self.story.id,
-                    route_path=route_path,
-                )
+            path = _rooted_path(
+                self.request,
+                f"/iframe/{self.story.id}/routes/{route_path}",
             )
+            return str(URLPath(path=path).make_absolute_url(self.request.base_url))
         raise NoMatchFound(name, dict(path_params))
 
 
@@ -107,3 +106,8 @@ def _slug(value: str) -> str:
 def _split_words(value: str) -> str:
     value = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", value)
     return value.replace("_", " ")
+
+
+def _rooted_path(request: Request, path: str) -> str:
+    root_path = str(request.scope.get("root_path", ""))
+    return f"{root_path}{path}"
