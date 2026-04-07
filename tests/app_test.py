@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.testclient import TestClient
+from starlette_html import body, div, html
 
 from starlette_html_stories import StoriesApp
 
@@ -94,3 +95,35 @@ def Primary():
     assert index.status_code == OK
     assert 'href="/__stories__/iframe/design-system-button--primary"' in index.text
     assert iframe.status_code == OK
+
+
+def test_stories_app_supports_preview_layout(tmp_path: Path) -> None:
+    """Preview layout should wrap story iframe content."""
+    story_file = tmp_path / "card_stories.py"
+    story_file.write_text(
+        """from starlette_html import p
+from starlette_html_stories import stories, story
+
+
+stories(title="Design System/Card")
+
+
+@story
+def Primary():
+    return p("Story content")
+""",
+        encoding="utf-8",
+    )
+
+    def PreviewLayout(*children: object) -> object:
+        return html(body(div(*children, cls="preview-layout")))
+
+    client = TestClient(
+        StoriesApp(directory=tmp_path, preview_layout=PreviewLayout)
+    )
+
+    iframe = client.get("/iframe/design-system-card--primary")
+
+    assert iframe.status_code == OK
+    assert 'class="preview-layout"' in iframe.text
+    assert "<p>Story content</p>" in iframe.text
