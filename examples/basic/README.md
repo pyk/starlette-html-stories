@@ -23,3 +23,5 @@ Open:
 - decorator-first stories in `examples/basic/stories`
 - story docs from leading Python comments
 - direct `StoriesApp` mounting without a helper
+- `preview_layout=partial(BaseLayout, page_title="Stories")` for shared story
+  preview chrome while keeping stories component-focused

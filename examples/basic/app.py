@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import logging
 import sys
+from functools import partial
 from typing import TYPE_CHECKING
 
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 from starlette_html import Document
 
+from examples.basic.layouts import BaseLayout
 from examples.basic.pages import HomePage
 from starlette_html_stories import StoriesApp
 
@@ -46,7 +48,10 @@ if app.debug:
     app.routes.append(
         Mount(
             "/__stories__",
-            app=StoriesApp(directory="examples/basic/stories"),
+            app=StoriesApp(
+                directory="examples/basic/stories",
+                preview_layout=partial(BaseLayout, page_title="Stories"),
+            ),
             name="stories",
         )
     )
