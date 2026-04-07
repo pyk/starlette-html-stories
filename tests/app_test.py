@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from starlette.applications import Starlette
+from starlette.routing import Mount
 from starlette.testclient import TestClient
 
 from starlette_html_stories import StoriesApp
@@ -56,3 +58,39 @@ def WithHtmx(ctx):
     assert "Demonstrates SearchBox with a mocked HTMX endpoint." in iframe.text
     assert local_route.status_code == OK
     assert local_route.text == '<div id="results">Mocked search results</div>'
+
+
+def test_stories_app_uses_mount_root_path_for_links(tmp_path: Path) -> None:
+    """Mounted stories should generate links under the mount path."""
+    story_file = tmp_path / "button_stories.py"
+    story_file.write_text(
+        """from starlette_html import button
+from starlette_html_stories import stories, story
+
+
+stories(title="Design System/Button")
+
+
+@story
+def Primary():
+    return button("Save")
+""",
+        encoding="utf-8",
+    )
+    app = Starlette(
+        routes=[
+            Mount(
+                "/__stories__",
+                app=StoriesApp(directory=tmp_path),
+                name="stories",
+            )
+        ]
+    )
+    client = TestClient(app)
+
+    index = client.get("/__stories__/")
+    iframe = client.get("/__stories__/iframe/design-system-button--primary")
+
+    assert index.status_code == OK
+    assert 'href="/__stories__/iframe/design-system-button--primary"' in index.text
+    assert iframe.status_code == OK
