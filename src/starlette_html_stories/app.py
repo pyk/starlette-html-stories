@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, JSONResponse, Response
@@ -28,11 +28,13 @@ from starlette_html_stories.core import StoryDefinition, call_story
 from starlette_html_stories.discovery import discover_stories
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
     from pathlib import Path
 
     from starlette.requests import Request
     from starlette.types import Message, Receive, Scope, Send
+
+type PreviewLayout = Callable[..., object]
 
 
 class StoriesApp:
@@ -43,9 +45,11 @@ class StoriesApp:
         *,
         directory: str | Path,
         title: str = "starlette-html-stories",
+        preview_layout: PreviewLayout | None = None,
     ) -> None:
         """Create a stories app from a story directory."""
         self.title = title
+        self.preview_layout = preview_layout
         self.stories = discover_stories(directory)
         self._story_by_id = {story.id: story for story in self.stories}
         self._app = Starlette(
@@ -113,13 +117,17 @@ class StoriesApp:
             return result
 
         docs = section(p(story.docs), cls="story-docs") if story.docs else None
+        content = (docs, main(result))
+        if self.preview_layout is not None:
+            return Document(self.preview_layout(*content))
+
         return Document(
             html(
                 head(
                     page_title(f"{story.title} - {story.name}"),
                     style(_IFRAME_CSS),
                 ),
-                body(docs, main(result)),
+                body(*content),
             )
         )
 
@@ -138,10 +146,10 @@ class StoriesApp:
         async def send(message: Message) -> None:
             nonlocal status_code, headers
             if message["type"] == "http.response.start":
-                status_code = cast("int", message["status"])
-                headers = cast("list[tuple[bytes, bytes]]", message["headers"])
+                status_code = _message_status(message)
+                headers = _message_headers(message)
             elif message["type"] == "http.response.body":
-                body.extend(cast("bytes", message.get("body", b"")))
+                body.extend(_message_body(message))
 
         await app(scope, request.receive, send)
         response = Response(bytes(body), status_code=status_code)
@@ -181,6 +189,46 @@ def _story_group(
 def _story_path(request: Request, story_id: str) -> str:
     root_path = str(request.scope.get("root_path", ""))
     return f"{root_path}/iframe/{story_id}"
+
+
+def _message_status(message: Message) -> int:
+    status = message.get("status")
+    if isinstance(status, int):
+        return status
+    msg = "ASGI response start message is missing an integer status"
+    raise TypeError(msg)
+
+
+def _message_headers(message: Message) -> list[tuple[bytes, bytes]]:
+    headers = message.get("headers")
+    if not isinstance(headers, list):
+        msg = "ASGI response start message is missing headers"
+        raise TypeError(msg)
+    for header in headers:
+        if not _is_header_tuple(header):
+            msg = "ASGI response start message contains invalid headers"
+            raise TypeError(msg)
+    return headers
+
+
+def _message_body(message: Message) -> bytes:
+    body = message.get("body", b"")
+    if isinstance(body, bytes):
+        return body
+    msg = "ASGI response body message contains a non-bytes body"
+    raise TypeError(msg)
+
+
+def _is_header_tuple(header: object) -> bool:
+    return (
+        isinstance(header, tuple)
+        and len(header) == _HEADER_ITEM_LENGTH
+        and isinstance(header[0], bytes)
+        and isinstance(header[1], bytes)
+    )
+
+
+_HEADER_ITEM_LENGTH = 2
 
 
 _INDEX_CSS = (
