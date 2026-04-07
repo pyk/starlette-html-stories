@@ -11,13 +11,15 @@ from starlette_html import (
     Document,
     a,
     body,
-    create_element,
     h1,
     h2,
     head,
     html,
     li,
+    main,
     p,
+    section,
+    style,
     ul,
 )
 from starlette_html import title as page_title
@@ -31,6 +33,7 @@ if TYPE_CHECKING:
 
     from starlette.requests import Request
     from starlette.types import Message, Receive, Scope, Send
+
 
 class StoriesApp:
     """ASGI sub-application that serves discovered starlette-html stories."""
@@ -109,11 +112,7 @@ class StoriesApp:
         if isinstance(result, Response):
             return result
 
-        docs = (
-            section(p(story.docs), cls="story-docs")
-            if story.docs
-            else None
-        )
+        docs = section(p(story.docs), cls="story-docs") if story.docs else None
         return Document(
             html(
                 head(
@@ -177,21 +176,6 @@ def _story_group(
             ]
         ),
     )
-
-
-def main(*children: object, **attrs: object) -> object:
-    """Create a <main> element until starlette-html exports one."""
-    return create_element("main", *children, **attrs)
-
-
-def section(*children: object, **attrs: object) -> object:
-    """Create a <section> element until starlette-html exports one."""
-    return create_element("section", *children, **attrs)
-
-
-def style(*children: object, **attrs: object) -> object:
-    """Create a <style> element until starlette-html exports one."""
-    return create_element("style", *children, **attrs)
 
 
 _INDEX_CSS = (
