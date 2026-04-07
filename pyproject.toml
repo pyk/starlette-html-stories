@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "starlette>=1.0.0",
-    "starlette-html>=0.1.0",
+    "starlette-html>=0.2.0",
 ]
 
 [build-system]

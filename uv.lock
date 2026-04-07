@@ -193,14 +193,14 @@ wheels = [
 
 [[package]]
 name = "starlette-html"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "starlette" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/93/64/374d954b842c798d77aaf600992a899a7e1e2b53ace1abd2bedacf8fa756/starlette_html-0.1.0.tar.gz", hash = "sha256:af6b6a24b66a1c43be7f5b202b23612e163328d5a3a6325de07da196e5f619a7", size = 4326, upload-time = "2026-04-07T03:51:28.21Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/16/84dfaaf24cade247db8331dc030c2d73197965c9b9f7661296a7736a5e23/starlette_html-0.2.0.tar.gz", hash = "sha256:ac2e8c323546b4f995cc2dcc32e1ed6cd2e2b10ec87860df6cf0f9b31a4da864", size = 5413, upload-time = "2026-04-07T10:04:03.622Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/c1/c2bc65fe2bbc8e1224cbf985686c7aa67088924a54b67f4a9eca62f87fc3/starlette_html-0.1.0-py3-none-any.whl", hash = "sha256:a835b9faac3753d2e8ccdf29fcce511eebbd5b7dcf6810a639d3453deb686951", size = 5466, upload-time = "2026-04-07T03:51:27.242Z" },
+    { url = "https://files.pythonhosted.org/packages/25/5b/a1551da20cb89605e4ce0f13b2c12ba9f5a3579275dc7fb82dbdecfb6f4b/starlette_html-0.2.0-py3-none-any.whl", hash = "sha256:77d249f5161073bab269b4eb479e45a38dff9f47549b2ec3b95187e698f29513", size = 6814, upload-time = "2026-04-07T10:04:04.366Z" },
 ]
 
 [[package]]
@@ -225,7 +225,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "starlette", specifier = ">=1.0.0" },
-    { name = "starlette-html", specifier = ">=0.1.0" },
+    { name = "starlette-html", specifier = ">=0.2.0" },
 ]
 
 [package.metadata.requires-dev]
