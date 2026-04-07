@@ -7,8 +7,58 @@ authors = [
     { name = "pyk", email = "2213646+pyk@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "starlette>=1.0.0",
+    "starlette-html>=0.1.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    # Tests
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    # Formatter and Linter
+    "ruff>=0.15.9",
+    # Type Checker
+    "ty>=0.0.28",
+    # ASGI
+    "uvicorn>=0.44.0",
+]
+
+# ty - settings
+[tool.ty.src]
+exclude = ["external"]
+
+# ruff - settings
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # D212 and D213 are incompatible; we use D212 (summary on first line)
+    "D213",
+    # D203 and D211 are incompatible; we use D211 (no blank line before class)
+    "D203",
+    # Trailing comma rule conflict with formatter
+    "COM812",
+    # Allows non lower case function name
+    "N802"
+]
+exclude = ["external/**"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    # Allow usage of assert statement in test files
+    "S101"
+]
+
+# pytest - settings
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+norecursedirs = [
+    "external"
+]
