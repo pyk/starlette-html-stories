@@ -11,18 +11,17 @@ It gives you a simple way to:
 - render stories as isolated Starlette pages during development
 - pass example data as regular Python arguments
 - add story-local routes for HTMX interactions
-- wrap previews with your app layout when you want shared styling
 
 The goal is to make your app UI easier to discover, reuse, and keep consistent
 as it grows.
 
 You might also like my other Starlette packages that I use and maintain:
 
-| Package                                                                 | Description                  |
-| ----------------------------------------------------------------------- | ---------------------------- |
-| [`starlette-html`](https://github.com/pyk/starlette-html)               | Python-first HTML DSL.       |
-| [`starlette-hot-reload`](https://github.com/pyk/starlette-hot-reload)   | Hot reload for static files. |
-| [`starlette-tailwindcss`](https://github.com/pyk/starlette-tailwindcss) | Tailwind CSS builds.         |
+| Package                                                                 | Description                 |
+| ----------------------------------------------------------------------- | --------------------------- |
+| [`starlette-html`](https://github.com/pyk/starlette-html)               | Python-first HTML DSL       |
+| [`starlette-hot-reload`](https://github.com/pyk/starlette-hot-reload)   | Hot reload for static files |
+| [`starlette-tailwindcss`](https://github.com/pyk/starlette-tailwindcss) | Tailwind CSS integration    |
 
 ## Installation
 
