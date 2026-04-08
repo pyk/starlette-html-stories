@@ -149,8 +149,15 @@ just dev
 
 This starts `tools/app.py`, which uses the dev-only `starlette-tailwindcss`
 dependency to build and watch `tools/styles.css`. The generated CSS is written
-to `src/starlette_html_stories/static/stories.css`, committed to the repository,
-and bundled with the published package.
+to `src/starlette_html_stories/static/stories.css`, ignored by git, and bundled
+with the published package.
+
+For release, run:
+
+```shell
+just build
+uv publish
+```
 
 ## License
 
