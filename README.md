@@ -139,6 +139,19 @@ Open:
 - `http://127.0.0.1:8000/`
 - `http://127.0.0.1:8000/__stories__/`
 
+## Development
+
+Run the development server when working on `starlette-html-stories` itself:
+
+```shell
+just dev
+```
+
+This starts `tools/app.py`, which uses the dev-only `starlette-tailwindcss`
+dependency to build and watch `tools/styles.css`. The generated CSS is written
+to `src/starlette_html_stories/static/stories.css`, committed to the repository,
+and bundled with the published package.
+
 ## License
 
 MIT
