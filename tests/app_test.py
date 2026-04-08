@@ -97,6 +97,33 @@ def Primary():
     assert iframe.status_code == OK
 
 
+def test_stories_app_embeds_bundled_css_without_escaping(tmp_path: Path) -> None:
+    """Bundled Tailwind CSS should render as CSS, not escaped HTML text."""
+    story_file = tmp_path / "button_stories.py"
+    story_file.write_text(
+        """from starlette_html import button
+from starlette_html_stories import stories, story
+
+
+stories(title="Design System/Button")
+
+
+@story
+def Primary():
+    return button("Save")
+""",
+        encoding="utf-8",
+    )
+    client = TestClient(StoriesApp(directory=tmp_path))
+
+    index = client.get("/")
+
+    assert index.status_code == OK
+    assert "&gt;=" not in index.text
+    assert "&amp;:" not in index.text
+    assert "(width >= 40rem)" in index.text
+
+
 def test_stories_app_supports_preview_layout(tmp_path: Path) -> None:
     """Preview layout should wrap story iframe content."""
     story_file = tmp_path / "card_stories.py"
@@ -118,9 +145,7 @@ def Primary():
     def PreviewLayout(*children: object) -> object:
         return html(body(div(*children, cls="preview-layout")))
 
-    client = TestClient(
-        StoriesApp(directory=tmp_path, preview_layout=PreviewLayout)
-    )
+    client = TestClient(StoriesApp(directory=tmp_path, preview_layout=PreviewLayout))
 
     iframe = client.get("/iframe/design-system-card--primary")
 
