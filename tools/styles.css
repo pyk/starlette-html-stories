@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@source "../src/starlette_html_stories/**/*.py";
+@source "../tools/**/*.py";
+
+@layer components {
+    .story-docs {
+        @apply mb-6 whitespace-pre-wrap text-slate-600;
+    }
+}
