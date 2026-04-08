@@ -8,6 +8,35 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-08
+
+### Added
+
+- `html_stories(...)` lifespan helper for composing stories directly into a
+  Starlette app.
+- Maintainer dev tooling with Tailwind CSS generation and hot reload support.
+- `just dev` and `just build` workflows for local development and release.
+
+### Changed
+
+- Stories now attach routes to the parent Starlette app instead of running as a
+  sub-application.
+- Story previews now activate through the application lifespan and only run when
+  `debug=True`.
+- Example application, README, and release flow updated to the new
+  lifespan-based integration model.
+- Bundled CSS is generated during development and release builds rather than
+  committed as a tracked source file.
+
+### Fixed
+
+- Bundled CSS is now rendered without HTML escaping Tailwind syntax.
+- Story link generation now respects the configured mount path.
+
+### Removed
+
+- Public `StoriesApp` ASGI sub-application API.
+
 ## [0.1.0] - 2026-04-07
 
 ### Added
@@ -27,5 +56,6 @@ and this project adheres to
   and preview layouts.
 
 [unreleased]:
-    https://github.com/pyk/starlette-html-stories/compare/v0.1.0...HEAD
+    https://github.com/pyk/starlette-html-stories/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pyk/starlette-html-stories/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pyk/starlette-html-stories/releases/tag/v0.1.0
