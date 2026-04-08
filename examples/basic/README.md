@@ -22,6 +22,6 @@ Open:
 - a page component in `examples/basic/pages`
 - decorator-first stories in `examples/basic/stories`
 - story docs from leading Python comments
-- direct `StoriesApp` mounting without a helper
+- `html_stories(...)` lifespan composition without a sub-app
 - `preview_layout=partial(BaseLayout, page_title="Stories")` for shared story
   preview chrome while keeping stories component-focused

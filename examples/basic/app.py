@@ -4,18 +4,21 @@ from __future__ import annotations
 
 import logging
 import sys
+from contextlib import asynccontextmanager
 from functools import partial
 from typing import TYPE_CHECKING
 
 from starlette.applications import Starlette
-from starlette.routing import Mount, Route
+from starlette.routing import Route
 from starlette_html import Document
 
 from examples.basic.layouts import BaseLayout
 from examples.basic.pages import HomePage
-from starlette_html_stories import StoriesApp
+from starlette_html_stories import html_stories
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from starlette.requests import Request
     from starlette.responses import HTMLResponse
 
@@ -39,19 +42,19 @@ routes = [
 ]
 
 
+@asynccontextmanager
+async def lifespan(app: Starlette) -> AsyncIterator[None]:
+    """Attach stories to the app during development."""
+    async with html_stories(
+        app=app,
+        directory="examples/basic/stories",
+        preview_layout=partial(BaseLayout, page_title="Stories"),
+    ):
+        yield
+
+
 app = Starlette(
     debug=True,
     routes=routes,
+    lifespan=lifespan,
 )
-
-if app.debug:
-    app.routes.append(
-        Mount(
-            "/__stories__",
-            app=StoriesApp(
-                directory="examples/basic/stories",
-                preview_layout=partial(BaseLayout, page_title="Stories"),
-            ),
-            name="stories",
-        )
-    )
