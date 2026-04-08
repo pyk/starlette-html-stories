@@ -1,23 +1,47 @@
-"""StoriesApp integration tests."""
+"""html_stories integration tests."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
 from starlette.applications import Starlette
-from starlette.routing import Mount
 from starlette.testclient import TestClient
 from starlette_html import body, div, html
 
-from starlette_html_stories import StoriesApp
+from starlette_html_stories import html_stories
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
     from pathlib import Path
 
 OK = 200
+PreviewLayout = Callable[..., object]
 
 
-def test_stories_app_renders_story_and_story_local_routes(tmp_path: Path) -> None:
+def _stories_app(
+    tmp_path: Path,
+    *,
+    mount_path: str = "/__stories__",
+    preview_layout: PreviewLayout | None = None,
+) -> Starlette:
+    @asynccontextmanager
+    async def lifespan(app: Starlette) -> AsyncIterator[None]:
+        async with html_stories(
+            app=app,
+            directory=tmp_path,
+            mount_path=mount_path,
+            preview_layout=preview_layout,
+        ):
+            yield
+
+    return Starlette(debug=True, lifespan=lifespan)
+
+
+def test_html_stories_renders_story_and_story_local_routes(
+    tmp_path: Path,
+) -> None:
     """Stories can render HTMX URLs backed by story-local Starlette routes."""
     story_file = tmp_path / "search_stories.py"
     story_file.write_text(
@@ -44,25 +68,52 @@ def WithHtmx(ctx):
 """,
         encoding="utf-8",
     )
-    client = TestClient(StoriesApp(directory=tmp_path))
+    with TestClient(_stories_app(tmp_path)) as client:
+        iframe = client.get("/__stories__/iframe/design-system-search-box--with-htmx")
+        local_route = client.get(
+            "/__stories__/iframe/design-system-search-box--with-htmx/routes/search"
+        )
 
-    iframe = client.get("/iframe/design-system-search-box--with-htmx")
-    local_route = client.get(
-        "/iframe/design-system-search-box--with-htmx/routes/search"
-    )
-
-    assert iframe.status_code == OK
-    assert (
-        'hx-get="http://testserver/iframe/'
-        'design-system-search-box--with-htmx/routes/search"'
-    ) in iframe.text
-    assert "Demonstrates SearchBox with a mocked HTMX endpoint." in iframe.text
-    assert local_route.status_code == OK
-    assert local_route.text == '<div id="results">Mocked search results</div>'
+        assert iframe.status_code == OK
+        assert (
+            'hx-get="http://testserver/__stories__/iframe/'
+            'design-system-search-box--with-htmx/routes/search"'
+        ) in iframe.text
+        assert "Demonstrates SearchBox with a mocked HTMX endpoint." in iframe.text
+        assert local_route.status_code == OK
+        assert local_route.text == '<div id="results">Mocked search results</div>'
 
 
-def test_stories_app_uses_mount_root_path_for_links(tmp_path: Path) -> None:
+def test_html_stories_uses_mount_root_path_for_links(tmp_path: Path) -> None:
     """Mounted stories should generate links under the mount path."""
+    story_file = tmp_path / "button_stories.py"
+    story_file.write_text(
+        """from starlette_html import button
+from starlette_html_stories import stories, story
+
+
+stories(title="Design System/Button")
+
+
+@story
+def Primary():
+    return button("Save")
+        """,
+        encoding="utf-8",
+    )
+    with TestClient(
+        _stories_app(tmp_path, mount_path="/"), root_path="/__stories__"
+    ) as client:
+        index = client.get("/")
+        iframe = client.get("/iframe/design-system-button--primary")
+
+        assert index.status_code == OK
+        assert 'href="/__stories__/iframe/design-system-button--primary"' in index.text
+        assert iframe.status_code == OK
+
+
+def test_html_stories_can_mount_at_root(tmp_path: Path) -> None:
+    """Stories can be attached directly at the Starlette root path."""
     story_file = tmp_path / "button_stories.py"
     story_file.write_text(
         """from starlette_html import button
@@ -78,26 +129,18 @@ def Primary():
 """,
         encoding="utf-8",
     )
-    app = Starlette(
-        routes=[
-            Mount(
-                "/__stories__",
-                app=StoriesApp(directory=tmp_path),
-                name="stories",
-            )
-        ]
-    )
-    client = TestClient(app)
+    with TestClient(_stories_app(tmp_path, mount_path="/")) as client:
+        index = client.get("/")
+        iframe = client.get("/iframe/design-system-button--primary")
 
-    index = client.get("/__stories__/")
-    iframe = client.get("/__stories__/iframe/design-system-button--primary")
-
-    assert index.status_code == OK
-    assert 'href="/__stories__/iframe/design-system-button--primary"' in index.text
-    assert iframe.status_code == OK
+        assert index.status_code == OK
+        assert 'href="/iframe/design-system-button--primary"' in index.text
+        assert iframe.status_code == OK
 
 
-def test_stories_app_embeds_bundled_css_without_escaping(tmp_path: Path) -> None:
+def test_html_stories_embeds_bundled_css_without_escaping(
+    tmp_path: Path,
+) -> None:
     """Bundled Tailwind CSS should render as CSS, not escaped HTML text."""
     story_file = tmp_path / "button_stories.py"
     story_file.write_text(
@@ -114,17 +157,16 @@ def Primary():
 """,
         encoding="utf-8",
     )
-    client = TestClient(StoriesApp(directory=tmp_path))
+    with TestClient(_stories_app(tmp_path)) as client:
+        index = client.get("/__stories__/")
 
-    index = client.get("/")
-
-    assert index.status_code == OK
-    assert "&gt;=" not in index.text
-    assert "&amp;:" not in index.text
-    assert "(width >= 40rem)" in index.text
+        assert index.status_code == OK
+        assert "&gt;=" not in index.text
+        assert "&amp;:" not in index.text
+        assert "(width >= 40rem)" in index.text
 
 
-def test_stories_app_supports_preview_layout(tmp_path: Path) -> None:
+def test_html_stories_supports_preview_layout(tmp_path: Path) -> None:
     """Preview layout should wrap story iframe content."""
     story_file = tmp_path / "card_stories.py"
     story_file.write_text(
@@ -145,10 +187,9 @@ def Primary():
     def PreviewLayout(*children: object) -> object:
         return html(body(div(*children, cls="preview-layout")))
 
-    client = TestClient(StoriesApp(directory=tmp_path, preview_layout=PreviewLayout))
+    with TestClient(_stories_app(tmp_path, preview_layout=PreviewLayout)) as client:
+        iframe = client.get("/__stories__/iframe/design-system-card--primary")
 
-    iframe = client.get("/iframe/design-system-card--primary")
-
-    assert iframe.status_code == OK
-    assert 'class="preview-layout"' in iframe.text
-    assert "<p>Story content</p>" in iframe.text
+        assert iframe.status_code == OK
+        assert 'class="preview-layout"' in iframe.text
+        assert "<p>Story content</p>" in iframe.text
