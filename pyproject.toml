@@ -1,6 +1,6 @@
 [project]
 name = "starlette-html-stories"
-version = "0.1.0"
+version = "0.2.0"
 description = "Storybook-like development tools for starlette-html components"
 readme = "README.md"
 authors = [
