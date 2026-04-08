@@ -52,6 +52,7 @@ class StoryContext:
 
     request: Request
     story: StoryDefinition
+    mount_path: str = "/__stories__"
 
     def url_for(self, name: str, **path_params: object) -> str:
         """Return a URL for one of the current story's local routes."""
@@ -63,6 +64,7 @@ class StoryContext:
             route_path = str(url_path).lstrip("/")
             path = _rooted_path(
                 self.request,
+                self.mount_path,
                 f"/iframe/{self.story.id}/routes/{route_path}",
             )
             return str(URLPath(path=path).make_absolute_url(self.request.base_url))
@@ -74,9 +76,14 @@ def story_id(title: str, export_name: str) -> str:
     return f"{_slug(_split_words(title))}--{_slug(_split_words(export_name))}"
 
 
-async def call_story(story: StoryDefinition, request: Request) -> RenderResult:
+async def call_story(
+    story: StoryDefinition,
+    request: Request,
+    *,
+    mount_path: str = "/__stories__",
+) -> RenderResult:
     """Call a story function with the subset of supported arguments it asks for."""
-    ctx = StoryContext(request=request, story=story)
+    ctx = StoryContext(request=request, story=story, mount_path=mount_path)
     kwargs: dict[str, object] = {}
     signature = inspect.signature(story.func)
     for name in signature.parameters:
@@ -108,6 +115,15 @@ def _split_words(value: str) -> str:
     return value.replace("_", " ")
 
 
-def _rooted_path(request: Request, path: str) -> str:
+def _rooted_path(request: Request, mount_path: str, path: str) -> str:
     root_path = str(request.scope.get("root_path", ""))
-    return f"{root_path}{path}"
+    normalized_mount_path = _normalize_mount_path(mount_path)
+    return f"{root_path}{normalized_mount_path}{path}"
+
+
+def _normalize_mount_path(mount_path: str) -> str:
+    if mount_path in {"", "/"}:
+        return ""
+    if not mount_path.startswith("/"):
+        mount_path = f"/{mount_path}"
+    return mount_path.rstrip("/")
