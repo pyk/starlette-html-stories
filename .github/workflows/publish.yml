@@ -15,5 +15,8 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - uses: astral-sh/setup-uv@v8.0.0
-            - run: uv build
+            - uses: extractions/setup-just@v3
+              with:
+                  just-version: 1.49.0
+            - run: just build
             - run: uv publish
