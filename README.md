@@ -33,26 +33,26 @@ pip install starlette-html-stories
 
 ## Usage
 
-### Step 1: Mount the stories app
+### Step 1: Compose `html_stories` in lifespan
 
-Mount `StoriesApp` only in development.
+`html_stories` only activates when `app.debug` is `True`.
 
 ```python
+from contextlib import asynccontextmanager
+
 from starlette.applications import Starlette
-from starlette.routing import Mount
-from starlette_html_stories import StoriesApp
+from starlette_html_stories import html_stories
+
+@asynccontextmanager
+async def lifespan(app: Starlette):
+    async with html_stories(
+        app=app,
+        directory="src/app/ui/stories",
+    ):
+        yield
 
 
-app = Starlette(debug=True, routes=[...])
-
-if app.debug:
-    app.routes.append(
-        Mount(
-            "/__stories__",
-            app=StoriesApp(directory="src/app/ui/stories"),
-            name="stories",
-        )
-    )
+app = Starlette(debug=True, routes=[...], lifespan=lifespan)
 ```
 
 Then open `/__stories__/` in your browser.
@@ -89,16 +89,21 @@ Use `preview_layout` when stories should use your app shell, global CSS, or
 design-system layout.
 
 ```python
+from contextlib import asynccontextmanager
 from functools import partial
 
 from app.ui.layouts import BaseLayout
-from starlette_html_stories import StoriesApp
+from starlette_html_stories import html_stories
 
 
-stories_app = StoriesApp(
-    directory="src/app/ui/stories",
-    preview_layout=partial(BaseLayout, page_title="Stories"),
-)
+@asynccontextmanager
+async def lifespan(app):
+    async with html_stories(
+        app=app,
+        directory="src/app/ui/stories",
+        preview_layout=partial(BaseLayout, page_title="Stories"),
+    ):
+        yield
 ```
 
 This keeps each story focused on the component:
