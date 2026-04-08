@@ -2,6 +2,11 @@ check:
     uv run ruff check
     uv run ty check
 
+# Generate bundled CSS before packaging the release artifacts.
+build:
+    uv run python -m tools.build_css
+    uv build
+
 dev:
     uv run uvicorn tools.app:app --reload --host 0.0.0.0
 
